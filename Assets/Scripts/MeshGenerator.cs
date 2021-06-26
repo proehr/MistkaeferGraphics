@@ -6,7 +6,7 @@ using UnityEngine;
 
 /*
  *  Author: Marting Zier - HTW Berlin 
- *  Editor: Bartholomäus Berresheim, Marie Lencer
+ *  Editor: Bartholomäus Berresheim, Marie Lencer, Pauline Röhr
  */
 public class MeshGenerator : MonoBehaviour
 {
@@ -34,6 +34,9 @@ public class MeshGenerator : MonoBehaviour
     [SerializeField] private Surfaces surfaceType;
 
     // Dini, Enneper, torus By @Bartholomäus Berresheim
+    // Figure8, Flower, BoySurface By @Marie Lencer
+    // SpiralTorus, Butterfly, Trefoil By @Pauline Röhr
+    
     private void Start()
     {
         switch (surfaceType)
@@ -81,70 +84,70 @@ public class MeshGenerator : MonoBehaviour
 
     // By @Martin Zier
     void Generate()
-    {
-        generatedMesh = new Mesh();
-        meshfilter.mesh = generatedMesh;
+     {
+         generatedMesh = new Mesh();
+         meshfilter.mesh = generatedMesh;
+         
+         var subdivisions = new Vector2Int(subdivisionSize, subdivisionSize);     
+         var vertexSize = subdivisions + new Vector2Int(1, 1);            
+                                                                                        
+         var vertices = new Vector3[vertexSize.x * vertexSize.y];                     
+         var uvs = new Vector2[vertices.Length];                                     
 
-        var subdivisions = new Vector2Int(subdivisionSize, subdivisionSize);
-        var vertexSize = subdivisions + new Vector2Int(1, 1);
+         for (var y = 0; y < vertexSize.y; y++)                            
+         {
+             var vNormalized = (1f / subdivisions.y) * y;                                
+             var v = Mathf.Lerp(vBounds.x, vBounds.y, vNormalized);                     // boundary check
 
-        var vertices = new Vector3[vertexSize.x * vertexSize.y];
-        var uvs = new Vector2[vertices.Length];
+             for (var x = 0; x < vertexSize.x; x++)                                   
+             {
+                 var uNormalized = (1f / subdivisions.x) * x;                       
+                 var u = Mathf.Lerp(uBounds.x, uBounds.y, uNormalized);                  // boundary check  
+                 
+                 var vertex = CalculateVertex(u,v);                                
+                 
+                 var uv = new Vector2(u, v);                                       
 
-        for (var y = 0; y < vertexSize.y; y++)
-        {
-            var vNormalized = (1f / subdivisions.y) * y;
-            var v = Mathf.Lerp(vBounds.x, vBounds.y, vNormalized); // boundary check
+                 var arrayIndex = x + y * vertexSize.x;
 
-            for (var x = 0; x < vertexSize.x; x++)
-            {
-                var uNormalized = (1f / subdivisions.x) * x;
-                var u = Mathf.Lerp(uBounds.x, uBounds.y, uNormalized); // boundary check  
+                 vertices[arrayIndex] = vertex;
+                 uvs[arrayIndex] = uv;
+             }
+         }
 
-                var vertex = CalculateVertex(u, v);
+         var triangles = new int[subdivisions.x * subdivisions.y * 6];
 
-                var uv = new Vector2(u, v);
+         for (var i = 0; i < subdivisions.x * subdivisions.y; i++)
+         {
+             var triangleIndex = (i % subdivisions.x) + (i / subdivisions.x) * vertexSize.x;
 
-                var arrayIndex = x + y * vertexSize.x;
+             var indexer = i * 6;
 
-                vertices[arrayIndex] = vertex;
-                uvs[arrayIndex] = uv;
-            }
+             triangles[indexer + 0] = triangleIndex;
+             triangles[indexer + 1] = triangleIndex + subdivisions.x + 1;
+             triangles[indexer + 2] = triangleIndex + 1;
+             
+             triangles[indexer + 3] = triangleIndex + 1;
+             triangles[indexer + 4] = triangleIndex + subdivisions.x + 1;
+             triangles[indexer + 5] = triangleIndex + subdivisions.x + 2;
+         }
 
-            generatedMesh.vertices = vertices;
-            generatedMesh.uv = uvs;
-        }
+         generatedMesh.vertices = vertices;
+         generatedMesh.uv = uvs;
+         generatedMesh.triangles = triangles;
 
-        var triangles = new int[subdivisions.x * subdivisions.y * 6];
+         generatedMesh.RecalculateBounds();
+         generatedMesh.RecalculateNormals();
+         generatedMesh.RecalculateTangents();
 
-        for (var i = 0; i < subdivisions.x * subdivisions.y; i++)
-        {
-            var triangleIndex = (i % subdivisions.x) + (i / subdivisions.x) * vertexSize.x;
-
-            var indexer = i * 6;
-
-            triangles[indexer + 0] = triangleIndex;
-            triangles[indexer + 1] = triangleIndex + subdivisions.x + 1;
-            triangles[indexer + 2] = triangleIndex + 1;
-
-            triangles[indexer + 3] = triangleIndex + 1;
-            triangles[indexer + 4] = triangleIndex + subdivisions.x + 1;
-            triangles[indexer + 5] = triangleIndex + subdivisions.x + 2;
-        }
-
-        generatedMesh.vertices = vertices;
-        generatedMesh.uv = uvs;
-        generatedMesh.triangles = triangles;
-
-        generatedMesh.RecalculateBounds();
-        generatedMesh.RecalculateNormals();
-        generatedMesh.RecalculateTangents();
-
-        meshfilter.mesh = generatedMesh;
-        meshcollider.sharedMesh = generatedMesh;
-    }
-
+         meshfilter.mesh= generatedMesh;
+         meshcollider.sharedMesh = generatedMesh;
+     }
+     
     // Dini, Enneper, Torus By @Bartholomäus Berresheim
+    // Figure8, Flower, BoySurface By @Marie Lencer
+    // SpiralTorus, Butterfly, Trefoil By @Pauline Röhr
+    
     Vector3 CalculateVertex(float u, float v)
     {
         float x = u;
