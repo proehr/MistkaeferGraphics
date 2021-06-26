@@ -85,9 +85,6 @@ public class MeshGenerator : MonoBehaviour
                  vertices[arrayIndex] = vertex;
                  uvs[arrayIndex] = uv;
              }
-
-             generatedMesh.vertices = vertices;
-             generatedMesh.uv = uvs;
          }
 
          var triangles = new int[subdivisions.x * subdivisions.y * 6];
@@ -166,7 +163,6 @@ public class MeshGenerator : MonoBehaviour
                 z = (float) ((3 * Math.Pow(Math.Cos(v), 2) )
                              / (2 - Math.Sqrt(2) * Math.Sin(3*u) * Math.Sin(2*v)));
                 break;
-            
         }
 
         return new Vector3(x, y, z);
